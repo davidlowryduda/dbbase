@@ -25,6 +25,9 @@ import sqlite3
 from contextlib import contextmanager
 
 
+from dbbase.plugin_manager import plugin_manager
+
+
 class DatabaseConnectionError(Exception):
     """
     Custom exception for database connection errors.
@@ -87,6 +90,8 @@ class DBBase:
         """
         if self.connection is None:
             raise DatabaseConnectionError("Database connection is not established.")
+
+        plugin_manager.call_hook("before_query", query, params)
 
         try:
             cursor = self.connection.cursor()

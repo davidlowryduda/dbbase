@@ -26,6 +26,7 @@ import sqlite3
 
 
 from dbbase.core import DBBase, DatabaseConnectionError
+from dbbase.plugin_manager import plugin_manager
 
 
 # From https://docs.python.org/3/library/sqlite3.html#sqlite3-adapter-converter-recipes
@@ -153,12 +154,15 @@ class Model(metaclass=ModelMeta):
     @classmethod
     def create(cls, db: DBBase, **kwargs):
         """Insert a new record into the table."""
+        instance = cls(**kwargs)
+        plugin_manager.call_hook("before_save", instance, db)
         fields = ", ".join(kwargs.keys())
         values = tuple(kwargs.values())
         placeholders = ", ".join("?" for _ in kwargs)
         query = f"INSERT INTO {cls.table_name} ({fields}) VALUES ({placeholders})"
         with db.transaction():
             db.execute(query, values)
+        plugin_manager.call_hook("after_save", instance, db)
 
     @classmethod
     def all(cls, db: DBBase):
@@ -177,18 +181,25 @@ class Model(metaclass=ModelMeta):
     @classmethod
     def update(cls, db: DBBase, where: dict, updates: dict):
         """Update records in the table."""
+        instance_before = cls.get(db, **where)
+        plugin_manager.call_hook("before_update", instance_before, updates, db)
         set_clause = ", ".join(f"{key} = ?" for key in updates)
         where_clause = " AND ".join(f"{key} = ?" for key in where)
         values = tuple(updates.values()) + tuple(where.values())
         query = f"UPDATE {cls.table_name} SET {set_clause} WHERE {where_clause}"
         with db.transaction():
             db.execute(query, values)
+        instance_after = cls.get(db, **where)
+        plugin_manager.call_hook("after_update", instance_before, instance_after, db)
 
     @classmethod
     def delete(cls, db: DBBase, **kwargs):
         """Delete records from the table."""
+        instance = cls.get(db, **kwargs)
+        plugin_manager.call_hook("before_delete", instance, db)
         conditions = " AND ".join(f"{key} = ?" for key in kwargs)
         values = tuple(kwargs.values())
         query = f"DELETE FROM {cls.table_name} WHERE {conditions}"
         with db.transaction():
             db.execute(query, values)
+        plugin_manager.call_hook("after_delete", instance, db)
