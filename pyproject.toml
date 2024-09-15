@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dbbase"
+version = "0.0.1"
+description = "A flexible and simple foundation for basic sqlite db projects"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [
+    { name = "David Lowry-Duda", email = "david@lowryduda.com" }
+]
+keywords = ["sqlite"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)"
+]
+
+# [project.urls]
+# Homepage = "https://github.com/aplace/name
