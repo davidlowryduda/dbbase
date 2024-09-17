@@ -50,7 +50,7 @@ class DBBase:
         Establish a connection to the SQLite database.
         """
         try:
-            self.connection = sqlite3.connect(self.db_path)
+            self.connection = sqlite3.connect(self.db_path, detect_types=sqlite3.PARSE_DECLTYPES)
             self.connection.row_factory = sqlite3.Row  # return results as dictionaries
         except sqlite3.Error as e:
             raise DatabaseConnectionError(f"Failed to connect to the database: {e}")

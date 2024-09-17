@@ -63,9 +63,9 @@ def convert_timestamp(val):
 sqlite3.register_adapter(datetime.date, adapt_date_iso)
 sqlite3.register_adapter(datetime.datetime, adapt_datetime_iso)
 sqlite3.register_adapter(datetime.datetime, adapt_datetime_epoch)
-sqlite3.register_converter("date", convert_date)
-sqlite3.register_converter("datetime", convert_datetime)
-sqlite3.register_converter("timestamp", convert_timestamp)
+sqlite3.register_converter("DATE", convert_date)
+sqlite3.register_converter("DATETIME", convert_datetime)
+sqlite3.register_converter("TIMESTAMP", convert_timestamp)
 
 
 class Field:
@@ -113,6 +113,11 @@ class TextField(Field):
 class DatetimeField(Field):
     def __init__(self, **kwargs):
         super().__init__(field_type="DATETIME", **kwargs)
+
+
+class TimestampField(Field):
+    def __init__(self, **kwargs):
+        super().__init__(field_type="TIMESTAMP", **kwargs)
 
 
 class DateField(Field):
