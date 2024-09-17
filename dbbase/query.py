@@ -31,12 +31,18 @@ class QueryBuilder:
     def __init__(self, table_name):
         self.table_name = table_name
         self.filters = []
+        self.filter_likes = []
         self.ordering = None
 
     def add_filter(self, **kwargs):
         """Add filters to the query."""
         for key, value in kwargs.items():
             self.filters.append((key, value))
+
+    def add_filter_like(self, **kwargs):
+        """Add LIKE filters to the query."""
+        for key, value in kwargs.items():
+            self.filter_likes.append((key, value))
 
     def set_order(self, field_name, descending=False):
         """Set ordering for the query."""
@@ -49,9 +55,15 @@ class QueryBuilder:
         if self.filters:
             filter_clauses = " AND ".join([f"{key} = ?" for key, _ in self.filters])
             query += f" WHERE {filter_clauses}"
+        if self.filter_likes:
+            filter_like_clauses = " AND ".join([f"{key} LIKE ?" for key, _ in
+                                                self.filter_likes])
+            query += f" WHERE {filter_like_clauses}"
         if self.ordering:
             query += f" ORDER BY {self.ordering}"
-        return query, tuple(value for _, value in self.filters)
+        value_tuple = tuple(value for _, value in self.filters)
+        value_tuple += tuple("%" + value + "%" for _, value in self.filter_likes)
+        return query, value_tuple
 
 
 class QuerySet:
@@ -71,6 +83,15 @@ class QuerySet:
             Post.filter(title="My Title")
         """
         self.query_builder.add_filter(**kwargs)
+        return self
+
+    def filter_like(self, **kwargs):
+        """
+        Add loose (LIKE) filtering conditions to the query.
+        Example:
+            Post.filter_like="My Title")
+        """
+        self.query_builder.add_filter_like(**kwargs)
         return self
 
     def order_by(self, field_name, descending=False):
