@@ -73,11 +73,12 @@ class Field:
     Base class for model fields.
     """
     def __init__(self, field_type: str, primary_key: bool = False,
-                 nullable: bool = True, default=None):
+                 nullable: bool = True, unique: bool = False, default=None):
         self.field_type = field_type
         self.primary_key = primary_key
         self.nullable = nullable
         self.default = default
+        self.unique = unique
 
     def get_definition(self):
         """
@@ -86,6 +87,9 @@ class Field:
         field_def = f"{self.field_type}"
         if self.primary_key:
             field_def += " PRIMARY KEY"
+        if self.unique:
+            if not self.primary_key:
+                field_def += " UNIQUE"
         if not self.nullable:
             field_def += " NOT NULL"
         if self.default is not None:
@@ -154,15 +158,14 @@ class Model(metaclass=ModelMeta):
     @classmethod
     def create(cls, db: DBBase, **kwargs):
         """Insert a new record into the table."""
-        instance = cls(**kwargs)
-        plugin_manager.call_hook("before_save", instance, db)
+        plugin_manager.call_hook("before_save", db, **kwargs)
         fields = ", ".join(kwargs.keys())
         values = tuple(kwargs.values())
         placeholders = ", ".join("?" for _ in kwargs)
         query = f"INSERT INTO {cls.table_name} ({fields}) VALUES ({placeholders})"
         with db.transaction():
             db.execute(query, values)
-        plugin_manager.call_hook("after_save", instance, db)
+        plugin_manager.call_hook("after_save", db, **kwargs)
 
     @classmethod
     def all(cls, db: DBBase):
